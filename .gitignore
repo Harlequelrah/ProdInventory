@@ -2,4 +2,4 @@ env
 *__pycache__
 alembic
 alembic.ini
-secret.py
+sqlapp/Authentication/secret.py

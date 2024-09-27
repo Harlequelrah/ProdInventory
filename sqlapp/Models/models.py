@@ -1,6 +1,6 @@
-from sqlalchemy import Column, DECIMAL, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Boolean, Column, DECIMAL, Integer, String, DateTime, ForeignKey,Text
 from sqlapp.Database.database import Base
-import bcrypt  # type: ignore
+from argon2 import PasswordHasher as Ph , exceptions as Ex
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
@@ -10,18 +10,21 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(256), unique=True, index=True)
     username = Column(String(256), unique=True, index=True)
-    password = Column(String(256))
+    password = Column(Text)
+    lastname = Column(String(256),nullable=False)
+    firstname = Column(String(256),nullable=False)
+    date_created = Column(DateTime, nullable=False, default=func.now())
+    is_active = Column(Boolean, default=True)
     orders = relationship("Order", back_populates="user")
 
     def set_password(self, password: str):
-        self.password = bcrypt.hashpw(
-            password.encode("utf-8"), bcrypt.gensalt()
-        ).decode("utf-8")
+        self.password = Ph.hash(password)
 
     def check_password(self, password: str) -> bool:
-        if bcrypt.checkpw(password.encode("utf-8"), self.password.encode("utf-8")):
+        try :
+            Ph.verify(self.password,password)
             return True
-        else:
+        except Ex.VerifyMismatchError:
             return False
 
 
@@ -40,7 +43,7 @@ class Product(Base):
     price = Column(DECIMAL(10, 2))
     date_created = Column(DateTime, nullable=False, default=func.now())
     date_updated = Column(DateTime, nullable=True, onupdate=func.now())
-    quantity_available = Column(Integer)
+    quantity_available = Column(Integer,nullable=False,default=0)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     category = relationship("Category")
     orders = relationship(
@@ -48,10 +51,12 @@ class Product(Base):
     )
 
     def can_be_ordered(self, orderer_quantity: int):
-        if self.quantity_available - orderer_quantity >= 0:
-            return True
-        else:
-            return False
+        if orderer_quantity<=0 :raise ValueError("La quantité doit être positive et non nulle")
+        return self.quantity_available >= orderer_quantity
+
+    def update_quantity_available(self, quantity: int):
+        if quantity<=0 : raise ValueError("La quantité doit être positive et non nulle")
+        self.quantity_available+=quantity
 
 
 class Order(Base):
@@ -59,7 +64,7 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User")
-    products = relationship("Order_Product", back_populates="order")
+    products = relationship("Product",secondary="order_products", back_populates="order")
     order_amount = Column(DECIMAL(10, 2))
     order_date = Column(DateTime, default=func.now())
 

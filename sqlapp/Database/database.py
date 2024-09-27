@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from secret import username , password
+from FASTAPI.ProdInventory.sqlapp.Authentication.secret import username , password
 
 SQLALCHEMY_DATABASE_URL=f"mysql+mysqlconnector://{username}:{password}@localhost:3306/prodinventory"
 engine = create_engine(SQLALCHEMY_DATABASE_URL,pool_pre_ping=True)
