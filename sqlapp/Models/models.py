@@ -10,7 +10,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(256), unique=True, index=True)
     username = Column(String(256), unique=True, index=True)
-    password = Column(Text)
+    password = Column(String(1024))
     lastname = Column(String(256),nullable=False)
     firstname = Column(String(256),nullable=False)
     date_created = Column(DateTime, nullable=False, default=func.now())
@@ -43,7 +43,7 @@ class Product(Base):
     price = Column(DECIMAL(10, 2))
     date_created = Column(DateTime, nullable=False, default=func.now())
     date_updated = Column(DateTime, nullable=True, onupdate=func.now())
-    quantity_available = Column(Integer,nullable=False,default=0)
+    quantity_available = Column(Integer,default=None)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     category = relationship("Category")
     orders = relationship(
@@ -65,11 +65,10 @@ class Order(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User")
     products = relationship("Product",secondary="order_products", back_populates="order")
-    order_amount = Column(DECIMAL(10, 2))
     order_date = Column(DateTime, default=func.now())
 
 
-    def update_order_amount(self):
+    def get_order_amount(self):
         total_amount = 0
         for ordered_product in self.products:
             if ordered_product.product.can_be_ordered(ordered_product.product_amount):
@@ -82,7 +81,7 @@ class Order(Base):
                     f"Quantité demandée pour le produit {ordered_product.product.name} non disponible."
                 )
 
-        self.order_amount = total_amount
+        return total_amount
 
 
 class Order_Product(Base):
