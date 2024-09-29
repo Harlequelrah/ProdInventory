@@ -4,6 +4,7 @@ from sqlapp.Database.database import get_db
 from sqlapp.Models.models import User
 from sqlapp.Schemas.schemas import AccessToken, RefreshToken
 from datetime import datetime, timedelta
+from sqlalchemy import or_
 from secret import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     ALGORITHM,
@@ -24,10 +25,10 @@ CREDENTIALS_EXCEPTION  = HTTPException(
 async def authenticate_user(db: Session, username_or_email: str, password: str):
     user = (
         db.query(User)
-        .filter(User.username == username_or_email | User.email == username_or_email)
+        .filter(or_(User.username == username_or_email ,User.email == username_or_email))
         .first()
     )
-    if not user or not user.check_password(password):
+    if not user or not user.check_password(password) or not user.is_active:
         return False
     return user
 
@@ -65,7 +66,7 @@ async def get_current_user(
             raise CREDENTIALS_EXCEPTION
     except JWTError:
         raise CREDENTIALS_EXCEPTION
-    user = db.query(User).filter(User.username == sub | User.email == sub).first()
+    user = db.query(User).filter(or_(User.username == sub,User.email == sub)).first()
     if user is None:
         raise CREDENTIALS_EXCEPTION
     return user
@@ -76,7 +77,7 @@ def refresh_token(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)):
         payload=jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
         sub=payload.get("sub")
         if sub is None : raise CREDENTIALS_EXCEPTION
-        user=db.query(User).filter(User.username==sub | User.email==sub).first()
+        user=db.query(User).filter(or_(User.username==sub , User.email==sub)).first()
         if user is None: raise CREDENTIALS_EXCEPTION
         access_token_expires=timedelta(ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token=create_access_token(

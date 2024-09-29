@@ -1,8 +1,7 @@
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
-from Models.models import User
+from Models.models import User,Order
 from Schemas.schemas import UserCreate, UserUpdate, User
-from typing import List
 from fastapi import HTTPException as HE, status
 from sqlalchemy import or_
 
@@ -49,6 +48,10 @@ def get_users(db: Session, skip: int = 0, limit: int = None):
         )
     else:
         return users
+
+def get_user_orders(db:Session,user_id:int):
+    user = get_user(db, user_id)
+    return db.query(Order).filter(Order.user_id == user_id).all()
 
 
 def delete_user(db: Session, user_id):

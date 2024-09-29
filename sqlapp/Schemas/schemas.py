@@ -20,12 +20,13 @@ class UserUpdate(BaseModel):
     firstname:Optional[str]
     is_active=Optional[bool]
     password: Optional[str]
+    orders: Optional[List["Order"]]
 
 class User(UserBase):
     id:int
     is_active:bool
     date_created:datetime
-    order:List[int]=[]
+    orders:List["Order"]=[]
 
     class config :
         from_orm=True
@@ -75,30 +76,47 @@ class ProductUpdate(BaseModel):
     description:Optional[str]
     price:Optional[Decimal]
     quantity_available:Optional[int]
+    orders: Optional[List["Order"]]
+    category_id:Optional[int]
 
 class Product(ProductCreate):
     id:int
-    orders:List[int]
+    orders:List["Order"]
     category_id:int
     class Config:
         from_orm=True
 
-class Order(BaseModel):
-    id:int
-    user_id:int
+
+class OrderBase(BaseModel):
+    user_id:int=Field(example=69)
     products:List[int]
+
+class OrderCreate(OrderBase):
+    pass
+
+class OrderUpdate(BaseModel):
+    user_id:Optional[int]
+    products:Optional[List[int]]
+
+
+class Order(OrderBase):
+    id:int
     order_date:datetime
     class config:
         from_orm=True
+
 
 class Order_ProductBase(BaseModel):
     product_amount:int=Field(example=35)
 
 class Order_ProductCreate(Order_ProductBase):
-    pass
+    order_id:int=Field(example=5)
+    product_id:int=Field(example=3)
 
 class Order_ProductUpdate(BaseModel):
-    product_amount: Optional[int] 
+    order_id:Optional[int]
+    product_id:Optional[int]
+    product_amount: Optional[int]
 
 class Order_Product(Order_ProductBase):
     order_id:int

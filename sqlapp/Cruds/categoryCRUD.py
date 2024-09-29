@@ -1,13 +1,12 @@
 from sqlalchemy.sql import func
 from fastapi import HTTPException, status
-from typing import List
 from Models.models import Category
 from Schemas.schemas import CategoryCreate, CategoryUpdate, Category
 from sqlalchemy.orm import Session
 
 
-def get_count_categories(db: Session):
-    return db.query(func.count((Category.id))).scalar()
+def get_count_categories(db:Session):
+    return db.query(func.count(Category.id)).scalar()
 
 
 def create_category(db: Session, category: CategoryCreate):
@@ -18,7 +17,7 @@ def create_category(db: Session, category: CategoryCreate):
         db.refresh(new_category)
     except Exception as e :
         db.rollback()
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR,detail="Erreur lors de la création de la categorie")
+        raise HTTPException(status.HTTP_400_BAD_REQUEST,detail="Erreur lors de la création de la categorie")
     return new_category
 
 
@@ -37,7 +36,6 @@ def get_categories(db:Session,skip:int=0,limit:int=None):
     return categories
 
 
-
 def delete_category(db: Session, category_id: int):
     category = get_category(db, category_id)
     try:
@@ -53,7 +51,7 @@ def delete_category(db: Session, category_id: int):
 def update_category(db: Session, category_id,category:CategoryUpdate):
     existing_category = get_category(db, category_id)
     try:
-        for key , value in category.dict(exclude_unset=True):
+        for key , value in category.dict(exclude_unset=True).items():
             setattr(existing_category,key,value)
         db.commit()
         db.refresh(update_category)
