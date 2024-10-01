@@ -14,13 +14,13 @@ class UserCreate(UserBase):
     password:str=Field(example="m*td*pa**e")
 
 class UserUpdate(BaseModel):
-    email:Optional[str]
-    username:Optional[str]
-    lastname:Optional[str]
-    firstname:Optional[str]
-    is_active=Optional[bool]
-    password: Optional[str]
-    orders: Optional[List["Order"]]
+    email:Optional[str]=None
+    username:Optional[str]=None
+    lastname:Optional[str]=None
+    firstname:Optional[str]=None
+    is_active:Optional[bool]=None
+    password: Optional[str]=None
+    orders: Optional[List["Order"]]=[]
 
 class User(UserBase):
     id:int
@@ -42,9 +42,12 @@ class RefreshToken(BaseModel):
     token_type: str
 
 
-class Tokens(BaseModel):
-    access_token: AccessToken
-    refresh_token: RefreshToken
+
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token :str
+    token_type:str
 
 class CategoryBase(BaseModel):
     name:str=Field(example="vêtement")

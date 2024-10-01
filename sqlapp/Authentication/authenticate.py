@@ -1,11 +1,11 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlapp.Schemas.schemas import AccessToken,RefreshToken
 from sqlapp.Database.database import get_db
 from sqlapp.Models.models import User
-from sqlapp.Schemas.schemas import AccessToken, RefreshToken
 from datetime import datetime, timedelta
 from sqlalchemy import or_
-from secret import (
+from .secret import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     ALGORITHM,
     REFRESH_TOKEN_EXPIRE_DAYS,
@@ -29,16 +29,19 @@ async def authenticate_user(db: Session, username_or_email: str, password: str):
         .first()
     )
     if not user or not user.check_password(password) or not user.is_active:
-        return False
+        raise CREDENTIALS_EXCEPTION
     return user
 
 
-def create_access_token(data: dict, expires_delta: timedelta = None) -> AccessToken:
-    to_encode = data.copy
+
+
+
+def create_access_token(data:dict, expires_delta: timedelta = None) -> AccessToken:
+    to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnoww() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encode_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return {"access_token": encode_jwt, "token_type": "bearer"}
@@ -52,22 +55,25 @@ def create_refresh_token(data: dict, expires_delta: timedelta = None) -> Refresh
         expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire})
     encode_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return {"refresh_token": encode_jwt}
+    return {"refresh_token": encode_jwt,"token_type":"bearer"}
 
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ):
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub: str = payload.get("sub")
+        print("sub"+sub)
         if sub is None:
+            print("sub is none")
             raise CREDENTIALS_EXCEPTION
     except JWTError:
+        print("error decoding")
         raise CREDENTIALS_EXCEPTION
     user = db.query(User).filter(or_(User.username == sub,User.email == sub)).first()
     if user is None:
+        print("user is none")
         raise CREDENTIALS_EXCEPTION
     return user
 

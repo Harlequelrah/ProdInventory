@@ -1,8 +1,8 @@
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
-from Models.models import User,Order
-from Schemas.schemas import UserCreate, UserUpdate, User
-from fastapi import HTTPException as HE, status
+from sqlapp.Models.models import User,Order
+from sqlapp.Schemas.schemas import UserCreate, UserUpdate
+from fastapi import HTTPException as HE, Response, status
 from sqlalchemy import or_
 
 def get_count_users(db: Session):
@@ -31,8 +31,8 @@ def create_user(db: Session, user: UserCreate):
     return new_user
 
 
-def get_user(db: Session, sub: str):
-    user = db.query(User).filter(User.username == sub | User.email == sub).first()
+def get_user(db: Session,id:int = None,  sub: str = None):
+    user = db.query(User).filter(or_(User.username == sub , User.email == sub , User.id==id)).first()
     if not user:
         raise HE(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur Non Trouvé")
     else:
@@ -65,6 +65,7 @@ def delete_user(db: Session, user_id):
             status_code=500,
             detail=f"Erreur lors de la suppression de l'utilisateur {str(e)}",
         )
+    return Response(status_code=200, content={"message": "Utilisateur supprimé avec succès"})
 
 
 def update_user(db: Session, user_id: int, user: UserUpdate):

@@ -1,8 +1,9 @@
-from sqlalchemy import Boolean, Column, DECIMAL, Integer, String, DateTime, ForeignKey,Text
+from sqlalchemy import Boolean, Column, DECIMAL, Integer, String, DateTime, ForeignKey,Table
 from sqlapp.Database.database import Base
-from argon2 import PasswordHasher as Ph , exceptions as Ex
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
+from sqlapp.Authentication.secret import Ph
+from argon2 import PasswordHasher, exceptions as Ex
 
 
 class User(Base):
@@ -15,7 +16,8 @@ class User(Base):
     firstname = Column(String(256),nullable=False)
     date_created = Column(DateTime, nullable=False, default=func.now())
     is_active = Column(Boolean, default=True)
-    orders = relationship("Order", back_populates="user")
+    orders = relationship("Order",back_populates="user")
+
 
     def set_password(self, password: str):
         self.password = Ph.hash(password)
@@ -26,6 +28,10 @@ class User(Base):
             return True
         except Ex.VerifyMismatchError:
             return False
+        except Ex.InvalidHashError:
+        # Le mot de passe haché est invalide, réessayez de hacher le mot de passe
+            self.set_password(password)
+            return self.check_password(password)
 
 
 class Category(Base):
@@ -47,7 +53,7 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     category = relationship("Category")
     orders = relationship(
-        "Order", secondary="order_products", back_populates="products"
+        "Order_Product", back_populates="product"
     )
 
     def can_be_ordered(self, orderer_quantity: int):
@@ -62,9 +68,9 @@ class Product(Base):
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("User")
-    products = relationship("Product",secondary="order_products", back_populates="order")
+    user_id=Column( Integer, ForeignKey("users.id"))
+    user=relationship("User",back_populates="orders")
+    products=relationship("Order_Product",back_populates="order")
     order_date = Column(DateTime, default=func.now())
 
 
@@ -89,5 +95,5 @@ class Order_Product(Base):
     order_id = Column(Integer, ForeignKey("orders.id"), primary_key=True)
     product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
     product = relationship("Product")
-    order = relationship("Order", back_populates="products")
+    order = relationship("Order")
     product_amount = Column(Integer)
