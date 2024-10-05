@@ -2,7 +2,7 @@ from pydantic import BaseModel,Field
 from typing import List,Optional
 from datetime import datetime
 from decimal import Decimal
-
+from sqlapp.Authentication.secret import SECRET_KEY
 
 class UserBase(BaseModel):
     email:str=Field(example="user@example.com")
@@ -42,8 +42,6 @@ class RefreshToken(BaseModel):
     token_type: str
 
 
-
-
 class Token(BaseModel):
     access_token: str
     refresh_token :str
@@ -57,8 +55,8 @@ class CategoryCreate(CategoryBase):
     pass
 
 class CategoryUpdate(BaseModel):
-    name:Optional[str]
-    label:Optional[str]
+    name:Optional[str]=None
+    label: Optional[str] = None
 
 class Category(CategoryBase):
     id:int
@@ -75,12 +73,12 @@ class ProductCreate(ProductBase):
     quantity_available: int = Field(example=25)
 
 class ProductUpdate(BaseModel):
-    name:Optional[str]
-    description:Optional[str]
-    price:Optional[Decimal]
-    quantity_available:Optional[int]
-    orders: Optional[List["Order"]]
-    category_id:Optional[int]
+    name:Optional[str]=None
+    description:Optional[str]=None
+    price:Optional[Decimal]=None
+    quantity_available:Optional[int]=None
+    orders: Optional[List["Order"]]=[]
+    category_id:Optional[int]=None
 
 class Product(ProductCreate):
     id:int
@@ -98,8 +96,8 @@ class OrderCreate(OrderBase):
     pass
 
 class OrderUpdate(BaseModel):
-    user_id:Optional[int]
-    products:Optional[List[int]]
+    user_id:Optional[int]=None
+    products:Optional[List[int]]=[]
 
 
 class Order(OrderBase):
@@ -117,12 +115,17 @@ class Order_ProductCreate(Order_ProductBase):
     product_id:int=Field(example=3)
 
 class Order_ProductUpdate(BaseModel):
-    order_id:Optional[int]
-    product_id:Optional[int]
-    product_amount: Optional[int]
+    order_id: Optional[int] = None
+    product_id: Optional[int] = None
+    product_amount: Optional[int] = None
 
 class Order_Product(Order_ProductBase):
     order_id:int
     product_id:int
     class Config:
         from_orm=True
+
+
+# class UserLogin(BaseModel):
+#     username: str
+#     password: str

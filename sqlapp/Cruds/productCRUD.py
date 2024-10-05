@@ -1,65 +1,91 @@
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
 from Models.models import Product
-from Schemas.schemas import ProductCreate , ProductUpdate , Product
-from fastapi import HTTPException as HE,status
+from Schemas.schemas import ProductCreate, ProductUpdate, Product
+from fastapi import HTTPException as HE, Response, status, Depends
+from Database.database import get_db
 from harlequelrah_fastapi.entity.utils import update_entity
 
-def count_products(db:Session):
+
+async def count_products(db: Session):
     return db.query(func.count(Product)).scalar()
 
-def get_product(db:Session,product_id):
-    product=db.query(Product).filter(Product.id==product_id).first()
-    if not product : raise HE(status_code=status.HTTP_404_NOT_FOUND,detail="Le produit n'a pas été trouvé")
-    return product
 
-
-def get_products_by_category(db: Session, category_id):
-    product = db.query(Product).filter(Product.category_id == category_id).all()
+async def get_product(product_id: int, db: Session):
+    product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HE(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Aucun produit n'a pas été trouvé pour cette catégorie"
+            detail="Le produit n'a pas été trouvé",
         )
     return product
 
 
-def get_products(db:Session,skip:int=0, limit:int=None):
-    products= db.query(Product).offset(skip).limit(limit).all()
-    if not products : raise HE(status_code=status.HTTP_404_NOT_FOUND,detail="Aucun produit n'a pas été trouvé")
+async def get_products_by_category(category_id: int, db: Session):
+    product = db.query(Product).filter(Product.category_id == category_id).all()
+    if not product:
+        raise HE(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Aucun produit n'a pas été trouvé pour cette catégorie",
+        )
+    return product
+
+
+async def get_products(db: Session, skip: int = 0, limit: int = None):
+    products = db.query(Product).offset(skip).limit(limit).all()
+    if not products:
+        raise HE(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Aucun produit n'a pas été trouvé",
+        )
     return products
 
-def create_product(db:Session,product:ProductCreate):
-    new_product=Product(**product)
+
+async def create_product(product: ProductCreate, db: Session):
+    new_product = Product(**product)
     try:
         db.add(new_product)
         db.commit()
         db.refresh(new_product)
     except Exception as e:
-        raise HE(status_code=status.HTTP_400_BAD_REQUEST,detail=f"Erreur lors de la création du produit : {str(e.detail)}")
+        raise HE(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Erreur lors de la création du produit : {str(e)}",
+        )
 
-def delete_product(db:Session,product_id:int):
-    product=get_product(db,product_id)
+
+async def delete_product(product_id: int, db: Session):
+    product = await get_product(product_id,db)
     try:
         db.delete(product)
         db.commit()
-    except  Exception as e:
+        return Response(
+        status_code=200, content={"message": "Utilisateur supprimé avec succès"}
+    )
+    except Exception as e:
         db.rollback()
-        raise HE(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Erreur lors de la suppression du produit : {str(e.detail)}")
+        raise HE(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la suppression du produit : {str(e)}",
+        )
 
-def update_product(db:Session,product_id:int,product:ProductUpdate):
-    existing_product=get_product(db,product_id)
+
+async def update_product(product_id: int, product: ProductUpdate, db: Session):
+    existing_product = await get_product(product_id,db)
     try:
-        update_entity(existing_product,product)
+        update_entity(existing_product, product)
         db.commit()
         db.refresh(existing_product)
     except Exception as e:
         db.rollback()
-        raise HE(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Erreur lors de la modification du produit : {str(e.detail)}")
+        raise HE(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la modification du produit : {str(e)}",
+        )
 
 
-def update_product_quantiy(db: Session, product_id: int,quantity:int):
-    existing_product = get_product(db, product_id)
+async def update_product_quantiy(product_id: int, quantity: int, db: Session):
+    existing_product = get_product(product_id,db)
     try:
         existing_product.update_quantity_available(quantity=quantity)
         db.commit()
@@ -68,5 +94,5 @@ def update_product_quantiy(db: Session, product_id: int,quantity:int):
         db.rollback()
         raise HE(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erreur lors de la modification du produit : {str(e.detail)}",
+            detail=f"Erreur lors de la modification du produit : {str(e)}",
         )

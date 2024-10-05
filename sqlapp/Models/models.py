@@ -1,9 +1,21 @@
-from sqlalchemy import Boolean, Column, DECIMAL, Integer, String, DateTime, ForeignKey,Table
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DECIMAL,
+    Integer,
+    String,
+    DateTime,
+    ForeignKey,
+    Table,
+)
 from sqlapp.Database.database import Base
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from sqlapp.Authentication.secret import Ph
+
 from argon2 import PasswordHasher, exceptions as Ex
+
+
+Ph = PasswordHasher()
 
 
 class User(Base):
@@ -12,24 +24,23 @@ class User(Base):
     email = Column(String(256), unique=True, index=True)
     username = Column(String(256), unique=True, index=True)
     password = Column(String(1024))
-    lastname = Column(String(256),nullable=False)
-    firstname = Column(String(256),nullable=False)
+    lastname = Column(String(256), nullable=False)
+    firstname = Column(String(256), nullable=False)
     date_created = Column(DateTime, nullable=False, default=func.now())
     is_active = Column(Boolean, default=True)
-    orders = relationship("Order",back_populates="user")
-
+    orders = relationship("Order", back_populates="user")
 
     def set_password(self, password: str):
         self.password = Ph.hash(password)
 
     def check_password(self, password: str) -> bool:
-        try :
-            Ph.verify(self.password,password)
+        try:
+            Ph.verify(self.password, password)
             return True
         except Ex.VerifyMismatchError:
             return False
         except Ex.InvalidHashError:
-        # Le mot de passe haché est invalide, réessayez de hacher le mot de passe
+            # Le mot de passe haché est invalide, réessayez de hacher le mot de passe
             self.set_password(password)
             return self.check_password(password)
 
@@ -49,30 +60,29 @@ class Product(Base):
     price = Column(DECIMAL(10, 2))
     date_created = Column(DateTime, nullable=False, default=func.now())
     date_updated = Column(DateTime, nullable=True, onupdate=func.now())
-    quantity_available = Column(Integer,default=None)
+    quantity_available = Column(Integer, default=None)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     category = relationship("Category")
-    orders = relationship(
-        "Order_Product", back_populates="product"
-    )
+    orders = relationship("Order_Product", back_populates="product")
 
     def can_be_ordered(self, orderer_quantity: int):
-        if orderer_quantity<=0 :raise ValueError("La quantité doit être positive et non nulle")
+        if orderer_quantity <= 0:
+            raise ValueError("La quantité doit être positive et non nulle")
         return self.quantity_available >= orderer_quantity
 
     def update_quantity_available(self, quantity: int):
-        if quantity<=0 : raise ValueError("La quantité doit être positive et non nulle")
-        self.quantity_available+=quantity
+        if quantity <= 0:
+            raise ValueError("La quantité doit être positive et non nulle")
+        self.quantity_available += quantity
 
 
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True, index=True)
-    user_id=Column( Integer, ForeignKey("users.id"))
-    user=relationship("User",back_populates="orders")
-    products=relationship("Order_Product",back_populates="order")
+    user_id = Column(Integer, ForeignKey("users.id"))
+    user = relationship("User", back_populates="orders")
+    products = relationship("Order_Product", back_populates="order")
     order_date = Column(DateTime, default=func.now())
-
 
     def get_order_amount(self):
         total_amount = 0
@@ -81,7 +91,9 @@ class Order(Base):
                 total_amount += (
                     ordered_product.product_amount * ordered_product.product.price
                 )
-                ordered_product.product.quantity_available -= ordered_product.product_amount
+                ordered_product.product.quantity_available -= (
+                    ordered_product.product_amount
+                )
             else:
                 raise ValueError(
                     f"Quantité demandée pour le produit {ordered_product.product.name} non disponible."
