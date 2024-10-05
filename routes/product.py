@@ -18,6 +18,14 @@ async def count_products(db:Session=Depends(get_db)):
 async def get_products(db:Session=Depends(get_db),access_token:str=Depends(get_current_user)):
     return await crud.get_products(db)
 
+
+@app_product.get("/get-products/by/category/{category_id}", response_model=List[Product])
+async def get_products_by_category(category_id:int,
+    db: Session = Depends(get_db), access_token: str = Depends(get_current_user)
+):
+    return await crud.get_products_by_category(category_id,db)
+
+
 @app_product.get("/get-product/{product_id}",response_model=Product)
 async def get_product(product_id:int,db:Session=Depends(get_db),access_token:str=Depends(get_current_user)):
     return await crud.get_product(product_id,db)
@@ -33,3 +41,7 @@ async def delete_product(product_id:int,db:Session=Depends(get_db),access_token:
 @app_product.put("/update-product/{product_id}",response_model=Product)
 async def update_product(product_id:int,product:ProductUpdate,db:Session=Depends(get_db),access_token:str=Depends(get_current_user)):
     return await crud.update_product(product_id,product,db)
+
+@app_product.put("/update-product-quantity/{product_id}")
+async def update_product_quantity(product_id:int,quantity:int,db:Session=Depends(get_db),access_token:str=Depends(get_current_user)):
+    return await crud.update_product_quantity(product_id,quantity,db)

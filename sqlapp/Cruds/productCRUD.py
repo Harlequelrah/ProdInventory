@@ -86,8 +86,8 @@ async def update_product(product_id: int, product: ProductUpdate, db: Session):
     return existing_product
 
 
-async def update_product_quantiy(product_id: int, quantity: int, db: Session):
-    existing_product = get_product(product_id,db)
+async def update_product_quantity(product_id: int, quantity: int, db: Session):
+    existing_product = await  get_product(product_id,db)
     try:
         existing_product.update_quantity_available(quantity=quantity)
         db.commit()
@@ -98,3 +98,4 @@ async def update_product_quantiy(product_id: int, quantity: int, db: Session):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erreur lors de la modification du produit : {str(e)}",
         )
+    return Response(status.HTTP_200_OK,content="La quantité a bien été mise à jour")
