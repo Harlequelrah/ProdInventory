@@ -51,7 +51,7 @@ async def delete_category(category_id: int, db: Session):
         db.delete(category)
         db.commit()
         return Response(
-        status_code=204, content={"message": "Utilisateur supprimé avec succès"}
+        status_code=204, content="Categorie supprimé avec succès"
     )
     except Exception as e:
         db.rollback()

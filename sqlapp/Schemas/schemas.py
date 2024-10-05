@@ -71,6 +71,7 @@ class ProductBase(BaseModel):
 
 class ProductCreate(ProductBase):
     quantity_available: int = Field(example=25)
+    category_id:int
 
 class ProductUpdate(BaseModel):
     name:Optional[str]=None

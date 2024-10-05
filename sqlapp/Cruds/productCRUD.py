@@ -1,14 +1,14 @@
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
-from Models.models import Product
-from Schemas.schemas import ProductCreate, ProductUpdate, Product
+from sqlapp.Models.models import Product
+from sqlapp.Schemas.schemas import ProductCreate, ProductUpdate
 from fastapi import HTTPException as HE, Response, status, Depends
-from Database.database import get_db
+from sqlapp.Database.database import get_db
 from harlequelrah_fastapi.entity.utils import update_entity
 
 
 async def count_products(db: Session):
-    return db.query(func.count(Product)).scalar()
+    return db.query(func.count(Product.id)).scalar()
 
 
 async def get_product(product_id: int, db: Session):
@@ -41,8 +41,8 @@ async def get_products(db: Session, skip: int = 0, limit: int = None):
     return products
 
 
-async def create_product(product: ProductCreate, db: Session):
-    new_product = Product(**product)
+async def create_product(product:ProductCreate, db: Session):
+    new_product = Product(**product.dict())
     try:
         db.add(new_product)
         db.commit()
@@ -52,6 +52,7 @@ async def create_product(product: ProductCreate, db: Session):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Erreur lors de la création du produit : {str(e)}",
         )
+    return new_product
 
 
 async def delete_product(product_id: int, db: Session):
@@ -60,7 +61,7 @@ async def delete_product(product_id: int, db: Session):
         db.delete(product)
         db.commit()
         return Response(
-        status_code=200, content={"message": "Utilisateur supprimé avec succès"}
+        status_code=204, content="Produit supprimé avec succès"
     )
     except Exception as e:
         db.rollback()
@@ -79,9 +80,10 @@ async def update_product(product_id: int, product: ProductUpdate, db: Session):
     except Exception as e:
         db.rollback()
         raise HE(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Erreur lors de la modification du produit : {str(e)}",
         )
+    return existing_product
 
 
 async def update_product_quantiy(product_id: int, quantity: int, db: Session):

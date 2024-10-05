@@ -1,15 +1,15 @@
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Session
 from fastapi import HTTPException as HE, Response, status, Depends
-from Database.database import get_db
-from Models.models import Order_Product
-from Schemas.schemas import Order_Product, Order_ProductCreate, Order_ProductUpdate
+from sqlapp.Database.database import get_db
+from sqlapp.Models.models import Order_Product
+from sqlapp.Schemas.schemas import  Order_ProductCreate, Order_ProductUpdate
 from harlequelrah_fastapi.entity.utils import update_entity
 from sqlalchemy import and_
 
 
 async def get_count_order_product(db: Session):
-    return db.query(func.count(Order_Product.id)).scalar()
+    return db.query(func.count()).select_from(Order_Product).scalar()
 
 
 async def get_order_product(
@@ -78,7 +78,7 @@ async def delete_order_product(order_id: int,product_id:int, db: Session = Depen
         db.delete(order_product)
         db.commit()
         return Response(
-        status_code=200, content={"message": "Utilisateur supprimé avec succès"}
+        status_code=200, content="Commande-Produit supprimé avec succès"
     )
     except Exception as e:
         raise HE(

@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
-from Models.models import Order
-from Schemas.schemas import OrderCreate, OrderUpdate, Oder
+from sqlapp.Models.models import Order
+from sqlapp.Schemas.schemas import OrderCreate, OrderUpdate
 from fastapi import HTTPException as HE, Response, status, Depends
-from Database.database import get_db
+from sqlapp.Database.database import get_db
 from sqlalchemy.sql import func
 from harlequelrah_fastapi.entity.utils import update_entity
 
@@ -23,7 +23,7 @@ async def get_order(order_id: int, db: Session):
 
 
 async def create_order(order: OrderCreate, db: Session):
-    new_order = Order(**order.dictt)
+    new_order = Order(**order.dict())
     try:
         db.add(new_order)
         db.commit()
@@ -43,7 +43,7 @@ async def delete_order(order_id: int, db: Session):
         db.delete()
         db.commit()
         return Response(
-        status_code=200, content={"message": "Utilisateur supprimé avec succès"}
+        status_code=200, content="Commande supprimée avec succès"
     )
     except Exception as e:
         db.rollback()

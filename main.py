@@ -9,11 +9,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from routes.user import app_user
 from routes.category import app_category
+from routes.product import app_product
 
 
 app = FastAPI()
 app.include_router(app_user)
 app.include_router(app_category)
+app.include_router(app_product)
 models.Base.metadata.create_all(bind=engine)
 
 

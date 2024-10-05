@@ -69,15 +69,16 @@ async def delete_user(user_id, db: Session):
     try:
         db.delete(user)
         db.commit()
+        return Response(
+        status_code=200, content="Utilisateur supprimé avec succès"
+    )
     except Exception as e:
         db.rollback()
         raise HE(
             status_code=500,
             detail=f"Erreur lors de la suppression de l'utilisateur {str(e)}",
         )
-    return Response(
-        status_code=200, content={"message": "Utilisateur supprimé avec succès"}
-    )
+
 
 
 async def update_user(user_id: int, user: UserUpdate, db: Session):
