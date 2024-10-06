@@ -31,8 +31,8 @@ async def get_order(order_id: int, db: Session):
 
 async def create_order(order: OrderCreate, db: Session):
     new_order = Order(user_id=order.user_id,order_products=[])
-    user= await get_user(db,order.user_id)
     try:
+        user = await get_user(db, order.user_id)
         db.add(new_order)
         db.commit()
         db.refresh(new_order)
@@ -69,6 +69,12 @@ async def delete_order(order_id: int, db: Session):
 async def update_order(order_id: int, order: OrderUpdate, db: Session):
     existing_order = await get_order(order_id, db)
     try:
+        user = await get_user(db, order.user_id)
+        for product in order.products:
+            existing_product=await O_Pcrud.get_order_product(order_id,product.product_id,db)
+            update_entity(existing_product, product)
+            db.commit()
+            db.refresh(existing_product)
         update_entity(existing_order, order)
         db.commit()
         db.refresh(existing_order)
