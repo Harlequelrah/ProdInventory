@@ -99,3 +99,18 @@ async def update_product_quantity(product_id: int, quantity: int, db: Session):
             detail=f"Erreur lors de la modification du produit : {str(e)}",
         )
     return Response(status.HTTP_200_OK,content="La quantité a bien été mise à jour")
+
+
+async def order_product(product_id: int, quantity: int, db: Session):
+    existing_product = await get_product(product_id, db)
+    try:
+        existing_product.order_product(quantity=quantity)
+        db.commit()
+        db.refresh(existing_product)
+    except Exception as e:
+        db.rollback()
+        raise HE(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erreur lors de la modification du produit : {str(e)}",
+        )
+    return Response(status.HTTP_200_OK, content="La quantité a bien été mise à jour")

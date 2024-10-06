@@ -76,7 +76,7 @@ class Product(Base):
             raise ValueError("La quantité doit être positive et non nulle")
         self.quantity_available += quantity
 
-    def order(self, quantity: int):
+    def order_product(self, quantity: int):
         if quantity <= 0:
             raise ValueError("La quantité doit être positive et non nulle")
         self.quantity_available -= quantity

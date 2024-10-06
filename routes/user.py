@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlapp.Cruds import userCRUD as crud
 from sqlapp.Authentication.authenticate import get_current_user
 from typing import List
-from sqlapp.Schemas.schemas import UserCreate,UserUpdate,User
+from sqlapp.Schemas.schemas import User, UserCreate,UserUpdate
 
 app_user=APIRouter(
     prefix="/users",

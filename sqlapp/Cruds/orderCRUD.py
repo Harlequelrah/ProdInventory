@@ -1,11 +1,12 @@
 from sqlalchemy.orm import Session
 from sqlapp.Models.models import Order, Product, Order_Product
-from sqlapp.Schemas.schemas import OrderCreate, OrderUpdate
+from sqlapp.Schemas.schemas import Order_ProductCreate, OrderCreate, OrderUpdate
 from fastapi import HTTPException as HE, Response, status, Depends
 from sqlapp.Database.database import get_db
 from sqlalchemy.sql import func
 from sqlapp.Cruds.productCRUD import get_product
 from sqlapp.Cruds.userCRUD import get_user
+from sqlapp.Cruds import order_productCRUD as O_Pcrud
 from harlequelrah_fastapi.entity.utils import update_entity
 
 
@@ -30,26 +31,18 @@ async def get_order(order_id: int, db: Session):
 
 async def create_order(order: OrderCreate, db: Session):
     new_order = Order(user_id=order.user_id,order_products=[])
-    print("order_id", new_order.id)
-    user=get_user(db,order.user_id)
+    user= await get_user(db,order.user_id)
     try:
         db.add(new_order)
         db.commit()
         db.refresh(new_order)
-        print("second",new_order.id)
-        new_order_product = Order_Product(
-            product_amount=order.product_amount,
-            product_id=order.product_id,
-            order_id=new_order.id,
-        )
-        db.add(new_order_product)
-        db.commit()
-        db.refresh(new_order_product)
-        product= await get_product(order.product_id,db)
-        product.order(order.product_amount)
-        db.commit()
-        db.refresh(product)
-
+        for product in order.products:
+            new_order_product=Order_ProductCreate(
+                product_id=product.id,
+                quantity=product.quantity,
+                order_id=new_order.id,
+            )
+            O_Pcrud.create_order_product(product,db)
     except Exception as e:
         db.rollback()
         raise HE(

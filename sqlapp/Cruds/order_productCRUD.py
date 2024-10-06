@@ -7,6 +7,7 @@ from sqlapp.Schemas.schemas import  Order_ProductCreate, Order_ProductUpdate
 from harlequelrah_fastapi.entity.utils import update_entity
 from sqlalchemy import and_
 from typing import Optional
+from . import productCRUD as Pcrud
 
 
 async def get_count_order_product(db: Session):
@@ -71,6 +72,7 @@ async def create_order_product(
         db.add(new_order_product)
         db.commit()
         db.refresh(new_order_product)
+        Pcrud.order_product(order_product.product_id,order_product.product_amount,db)
     except Exception as e:
         raise HE(
             status_code=status.HTTP_400_BAD_REQUEST,
