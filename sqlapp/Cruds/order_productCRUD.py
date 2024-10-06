@@ -72,7 +72,7 @@ async def create_order_product(
         db.add(new_order_product)
         db.commit()
         db.refresh(new_order_product)
-        Pcrud.order_product(order_product.product_id,order_product.product_amount,db)
+        await Pcrud.order_product(order_product.product_id,order_product.product_amount,db)
     except Exception as e:
         raise HE(
             status_code=status.HTTP_400_BAD_REQUEST,
