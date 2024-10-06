@@ -72,11 +72,12 @@ async def create_order_product(
         db.add(new_order_product)
         db.commit()
         db.refresh(new_order_product)
-        await Pcrud.order_product(order_product.product_id,order_product.product_amount,db)
+        product= await Pcrud.get_product(order_product.product_id,db)
+        product.order_product(order_product.product_amount)
     except Exception as e:
         raise HE(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Erreur lors de la creation d'une ligne de commande produit",
+            detail=f"Erreur lors de la creation d'une ligne de commande produit : {str(e)}",
         )
     return new_order_product
 
