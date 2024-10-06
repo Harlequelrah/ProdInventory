@@ -2,6 +2,7 @@ from pydantic import BaseModel,Field
 from typing import List,Optional
 from datetime import datetime
 from decimal import Decimal
+from fastapi import Form
 from sqlapp.Authentication.secret import SECRET_KEY
 
 class UserBase(BaseModel):
@@ -20,14 +21,12 @@ class UserUpdate(BaseModel):
     firstname:Optional[str]=None
     is_active:Optional[bool]=None
     password: Optional[str]=None
-    orders: Optional[List["Order"]]=[]
 
 class User(UserBase):
     id:int
     is_active:bool
     date_created:datetime
-    orders:List["Order"]=[]
-
+    user_orders:List["Order"]=[]
     class config :
         from_orm=True
 
@@ -67,10 +66,10 @@ class ProductBase(BaseModel):
     name:str=Field(example="table")
     description:str=Field(example="Grande table pour le salon")
     price:Decimal = Field(example=50.75)
+    quantity_available: int = Field(example=25)
 
 
 class ProductCreate(ProductBase):
-    quantity_available: int = Field(example=25)
     category_id:int
 
 class ProductUpdate(BaseModel):
@@ -78,34 +77,44 @@ class ProductUpdate(BaseModel):
     description:Optional[str]=None
     price:Optional[Decimal]=None
     quantity_available:Optional[int]=None
-    orders: Optional[List["Order"]]=[]
     category_id:Optional[int]=None
 
-class Product(ProductCreate):
+class Product(ProductBase):
     id:int
-    orders:List["Order"]
+    product_orders:List["Order_Product"]
     category_id:int
     class Config:
         from_orm=True
 
 
+
+
+
 class OrderBase(BaseModel):
     user_id:int=Field(example=69)
-    products:List[int]
+    product_id: int = Field(example=3)
+
 
 class OrderCreate(OrderBase):
-    pass
+    product_amount: int = Field(example=35)
+
 
 class OrderUpdate(BaseModel):
-    user_id:Optional[int]=None
-    products:Optional[List[int]]=[]
+    user_id:Optional[int]=Field(default=None,example=1)
+    product_id: Optional[int] = Field(example=3,default=None)
+    product_amount: int = Field(example=35)
 
 
-class Order(OrderBase):
+class Order(BaseModel):
     id:int
+    user_id: int = Field(example=69)
     order_date:datetime
+    order_products: List["Order_Product"] = []
     class config:
         from_orm=True
+
+
+
 
 
 class Order_ProductBase(BaseModel):
@@ -126,7 +135,7 @@ class Order_Product(Order_ProductBase):
     class Config:
         from_orm=True
 
-
-# class UserLogin(BaseModel):
-#     username: str
-#     password: str
+class UserLoginModel(BaseModel):
+    username: Optional[str]=None
+    password: str
+    email:Optional[str]=None

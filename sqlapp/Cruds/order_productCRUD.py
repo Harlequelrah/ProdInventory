@@ -6,14 +6,21 @@ from sqlapp.Models.models import Order_Product
 from sqlapp.Schemas.schemas import  Order_ProductCreate, Order_ProductUpdate
 from harlequelrah_fastapi.entity.utils import update_entity
 from sqlalchemy import and_
+from typing import Optional
 
 
 async def get_count_order_product(db: Session):
     return db.query(func.count()).select_from(Order_Product).scalar()
 
+async def get_order_products(db:Session):
+    order_products= db.query(Order_Product).all()
+    if not order_products: raise HE(status_code=status.HTTP_404_NOT_FOUND,detail="Aucune Commande-Produit n'a été trouvée")
+    return order_products
+
+
 
 async def get_order_product(
-    order_id: int, product_id: int, db: Session = Depends(get_db)
+    order_id: int, product_id: int, db : Session
 ):
     order_product = (
         db.query(Order_Product)
@@ -32,7 +39,7 @@ async def get_order_product(
     return order_product
 
 
-async def get_order_product_by_order(order_id: int, db: Session = Depends(get_db)):
+async def get_order_products_by_order(order_id: int,db:Session):
     order_products = (
         db.query(Order_Product).filter(Order_Product.order_id == order_id).all()
     )
@@ -44,7 +51,7 @@ async def get_order_product_by_order(order_id: int, db: Session = Depends(get_db
     return order_products
 
 
-async def get_order_product_by_product(product_id: int, db: Session = Depends(get_db)):
+async def get_order_products_by_product(product_id: int, db : Session):
     order_products = (
         db.query(Order_Product).filter(Order_Product.product_id == product_id).all()
     )
@@ -57,7 +64,7 @@ async def get_order_product_by_product(product_id: int, db: Session = Depends(ge
 
 
 async def create_order_product(
-    order_product: Order_ProductCreate, db: Session = Depends(get_db)
+    order_product: Order_ProductCreate, db : Session
 ):
     new_order_product = Order_Product(**order_product.dict())
     try:
@@ -72,7 +79,7 @@ async def create_order_product(
     return new_order_product
 
 
-async def delete_order_product(order_id: int,product_id:int, db: Session = Depends(get_db)):
+async def delete_order_product(order_id: int,product_id:int, db : Session):
     order_product = await get_order_product(order_id, product_id,db)
     try:
         db.delete(order_product)
@@ -92,7 +99,7 @@ async def update_order_product(
     order_id: int,
     product_id:int,
     order_product: Order_ProductUpdate,
-    db: Session = Depends(get_db),
+    db : Session,
 ):
     existing_order_product = await get_order_product(order_id, product_id)
     try:
