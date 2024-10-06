@@ -38,11 +38,11 @@ async def create_order(order: OrderCreate, db: Session):
         db.refresh(new_order)
         for product in order.products:
             new_order_product=Order_ProductCreate(
-                product_id=product.id,
-                quantity=product.quantity,
+                product_id=product.product_id,
+                product_amount=product.product_amount,
                 order_id=new_order.id,
             )
-            O_Pcrud.create_order_product(product,db)
+            await O_Pcrud.create_order_product(new_order_product,db)
     except Exception as e:
         db.rollback()
         raise HE(
