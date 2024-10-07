@@ -4,7 +4,7 @@ from sqlapp.Models.models import Category
 from sqlapp.Schemas.schemas import CategoryCreate, CategoryUpdate
 from sqlalchemy.orm import Session
 from sqlapp.Database.database import get_db
-from harlequelrah_fastapi.entity.utils import update_entity
+from harlequelrah_fastapi.utility.utils import update_entity
 
 
 async def get_count_categories(db: Session):

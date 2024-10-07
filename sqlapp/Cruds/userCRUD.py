@@ -5,7 +5,7 @@ from sqlapp.Schemas.schemas import UserCreate, UserUpdate
 from fastapi import HTTPException as HE, Response, status, Depends
 from sqlapp.Database.database import get_db
 from sqlalchemy import or_
-from harlequelrah_fastapi.entity.utils import update_entity
+from harlequelrah_fastapi.utility.utils import update_entity
 
 
 async def get_count_users(db: Session):

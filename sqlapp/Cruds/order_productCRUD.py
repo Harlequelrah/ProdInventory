@@ -4,7 +4,7 @@ from fastapi import HTTPException as HE, Response, status, Depends
 from sqlapp.Database.database import get_db
 from sqlapp.Models.models import Order_Product
 from sqlapp.Schemas.schemas import  Order_ProductCreate, Order_ProductUpdate
-from harlequelrah_fastapi.entity.utils import update_entity
+from harlequelrah_fastapi.utility.utils import update_entity
 from sqlalchemy import and_
 from typing import Optional
 from . import productCRUD as Pcrud

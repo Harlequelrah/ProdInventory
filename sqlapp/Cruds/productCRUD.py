@@ -4,7 +4,7 @@ from sqlapp.Models.models import Product
 from sqlapp.Schemas.schemas import ProductCreate, ProductUpdate
 from fastapi import HTTPException as HE, Response, status, Depends
 from sqlapp.Database.database import get_db
-from harlequelrah_fastapi.entity.utils import update_entity
+from harlequelrah_fastapi.utility.utils import update_entity
 
 
 async def count_products(db: Session):
