@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import FastAPI, Depends, HTTPException, status
 import uvicorn
 from sqlapp.Models import models
-from sqlapp.Schemas.schemas import AccessToken, Token, User,UserLoginModel
+from sqlapp.Schemas.schemas import AccessToken, Token, User,UserLoginModel,RefreshToken
 from sqlapp.Database.database import engine, get_db
 from sqlapp.Authentication import authenticate,secret
 from fastapi.security import OAuth2PasswordRequestForm
@@ -49,11 +49,19 @@ async def login_api_user(
     return {'access_token': access_token['access_token'],'refresh_token': refresh_token['refresh_token'],'token_type':'bearer'}
 
 
-@app.get("/refresh-token", response_model=AccessToken)
+@app.get("/token/refresh-token", response_model=AccessToken)
 async def refresh_token(current_user: User = Depends(authenticate.get_current_user)):
     data = {"sub": current_user.username}
     access_token = authenticate.create_access_token(data)
     return access_token
+
+
+@app.get("/refresh-token", response_model=AccessToken)
+async def refresh_token(refresh_token:RefreshToken):
+    access_token= authenticate.refresh_token(refresh_token)
+    return access_token
+
+
 
 @app.post("/login",response_model=Token)
 async def login(usermodel:UserLoginModel,db:Session=Depends(get_db)):

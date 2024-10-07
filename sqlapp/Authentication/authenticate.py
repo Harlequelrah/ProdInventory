@@ -78,9 +78,9 @@ async def get_current_user(
     return user
 
 
-def refresh_token(token:str=Depends(oauth2_scheme),db:Session=Depends(get_db)):
+def refresh_token(token:RefreshToken,db:Session=Depends(get_db)):
     try:
-        payload=jwt.decode(token,SECRET_KEY,algorithms=[ALGORITHM])
+        payload=jwt.decode(token.refresh_token,SECRET_KEY,algorithms=[ALGORITHM])
         sub=payload.get("sub")
         if sub is None : raise CREDENTIALS_EXCEPTION
         user=db.query(User).filter(or_(User.username==sub , User.email==sub)).first()
