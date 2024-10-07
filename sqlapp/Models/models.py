@@ -87,7 +87,7 @@ class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="user_orders")
-    order_products = relationship("Order_Product", back_populates="order")
+    order_products = relationship("Order_Product", back_populates="order",cascade="all,delete-orphan")
     order_date = Column(DateTime, default=func.now())
 
     def get_order_amount(self):
@@ -110,7 +110,9 @@ class Order(Base):
 
 class Order_Product(Base):
     __tablename__ = "order_products"
-    order_id = Column(Integer, ForeignKey("orders.id"), primary_key=True)
+    order_id = Column(
+        Integer, ForeignKey("orders.id", ondelete="CASCADE"), primary_key=True
+    )
     product_id = Column(Integer, ForeignKey("products.id"), primary_key=True)
     product = relationship("Product",back_populates="product_orders")
     order = relationship("Order",back_populates="order_products")

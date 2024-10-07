@@ -19,7 +19,6 @@ async def get_order_products(db:Session):
     return order_products
 
 
-
 async def get_order_product(
     order_id: int, product_id: int, db : Session
 ):
@@ -70,10 +69,11 @@ async def create_order_product(
     new_order_product = Order_Product(**order_product.dict())
     try:
         db.add(new_order_product)
+        product = await Pcrud.get_product(order_product.product_id, db)
+        product.order_product(order_product.product_amount)
         db.commit()
         db.refresh(new_order_product)
-        product= await Pcrud.get_product(order_product.product_id,db)
-        product.order_product(order_product.product_amount)
+
     except Exception as e:
         raise HE(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -95,7 +95,6 @@ async def delete_order_product(order_id: int,product_id:int, db : Session):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Erreur lors de la suppression de la ligne de commande produit",
         )
-
 
 
 async def update_order_product(

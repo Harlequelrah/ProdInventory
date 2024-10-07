@@ -53,8 +53,10 @@ async def create_order(order: OrderCreate, db: Session):
 
 
 async def delete_order(order_id: int, db: Session):
-    order = await get_order(order_id, db)
     try:
+        order = await get_order(order_id, db)
+        for order_product in order.order_products:
+            order_product.product.update_quantity_available(order_product.product_amount)
         db.delete(order)
         db.commit()
         return Response(status_code=200, content="Commande supprimée avec succès")
@@ -70,12 +72,14 @@ async def update_order(order_id: int, order: OrderUpdate, db: Session):
     existing_order = await get_order(order_id, db)
     try:
         user = await get_user(db, order.user_id)
-        for product in order.products:
-            existing_product=await O_Pcrud.get_order_product(order_id,product.product_id,db)
-            update_entity(existing_product, product)
-            db.commit()
-            db.refresh(existing_product)
-        update_entity(existing_order, order)
+        for order_product in order.products:
+            existing_order_product=await O_Pcrud.get_order_product(order_id,order_product.product_id,db)
+            delta = existing_order_product.product_amount - order_product.product_amount
+            update_entity(existing_order_product, order_product)
+            if delta > 0 :
+                existing_order_product.product.update_quantity_available(delta)
+            elif delta< 0 :
+                existing_order_product.product.order_product(-delta)
         db.commit()
         db.refresh(existing_order)
     except Exception as e:
@@ -84,4 +88,4 @@ async def update_order(order_id: int, order: OrderUpdate, db: Session):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Erreur lors de la mise à jour de la commande : {str(e)}",
         )
-    return order
+    return existing_order
