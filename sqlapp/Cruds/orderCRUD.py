@@ -7,7 +7,7 @@ from sqlalchemy.sql import func
 from sqlapp.Cruds.productCRUD import get_product
 from sqlapp.Cruds.userCRUD import get_user
 from sqlapp.Cruds import order_productCRUD as O_Pcrud
-from harlequelrah_fastapi.utility.utils import update_entity
+from elrahapi.utility.utils import update_entity
 
 
 async def count_orders(db: Session):
